@@ -1,0 +1,141 @@
+{
+ "schema": 1,
+ "asset": "trilobite-left",
+ "version": "left-room-20261105-scaled004",
+ "label": "Provisional legacy left-head calibration (left-room)",
+ "status": "provisional: diagnostic fit, review gates pending; test independence compromised; optical blur unmeasured",
+ "head": "left",
+ "hardware_tag": null,
+ "hardware_tag_assignment": {
+  "assigned_by": null,
+  "note": "untagged: no hardware tag was recorded for this calibration; none is asserted"
+ },
+ "calibration_digest": "ab524d562420a904f6cd2ce073f399a24d1bf3da3ae383b5fe84e805b3e14270",
+ "content_digest": "c4d1e1a39a7c343c78d24a3390a2a7f5f2cd2d0c3c715ac4d304fb597c77751a",
+ "calibration": {
+  "model": "focused_plenoptic_virtual_camera_array",
+  "trial": "scaled-004",
+  "camera": "left",
+  "status": "provisional: review gates pending; diagnostic fit",
+  "lenslets": 130,
+  "frame": {
+   "name": "left head virtual-camera frame (rig global frame)",
+   "axes": "x along native u, y along native v, z toward the scene",
+   "origin": "pinhole plane z = 0 at the recorded lattice centre (gauge)",
+   "units": "mm"
+  }
+ },
+ "rf_frame_transform": {
+  "matrix": [
+   [
+    1,
+    0,
+    0
+   ],
+   [
+    0,
+    -1,
+    0
+   ],
+   [
+    0,
+    0,
+    -1
+   ]
+  ],
+  "unit_scale": 1000.0,
+  "from": "TV head frame, mm (x native u, y native v, z toward scene)",
+  "to": "RF eye frame, um (+X right, +Y up, -Z forward); examples then scale by 1e-6 to metres"
+ },
+ "layout": {
+  "geometry": "calibration",
+  "calibration_run": "run",
+  "source_recording": "source_recording/rec_20261105_191343_raw16_5fps"
+ },
+ "photometry": {
+  "session_id": "rec-192719",
+  "preprocessing": "dark_only"
+ },
+ "files": [
+  {
+   "path": "calibration/rays.json",
+   "role": "geometry",
+   "bytes": 56854,
+   "sha256": "58aead96d9937a00c5d8cb56b686b3aeeb806081e976bd0bda9de47d1af0af0b",
+   "source": "analysis/calib-20261105/run-001/calibration/scaled-004/left/rays.json"
+  },
+  {
+   "path": "calibration/rays.npy",
+   "role": "geometry",
+   "bytes": 38019200,
+   "sha256": "3be28a1488a4e962027c31ddb8016d2a66402ea336de784cdc872c1d42db140f",
+   "source": "analysis/calib-20261105/run-001/calibration/scaled-004/left/rays.npy"
+  },
+  {
+   "path": "calibration/lenslet.npy",
+   "role": "geometry",
+   "bytes": 3168384,
+   "sha256": "0e2006ca1cfcf49c984b2ed6d8d73e5fde8fa0ec3b019dcd13dd465122d76208",
+   "source": "analysis/calib-20261105/run-001/calibration/scaled-004/left/lenslet.npy"
+  },
+  {
+   "path": "run/run.json",
+   "role": "photometry",
+   "bytes": 7460,
+   "sha256": "ef228f2ee4bcba34899e19c7ac640ecd3385f12b3b09003a46b9c91923e71fed",
+   "source": "analysis/calib-20261105/run-001/run.json"
+  },
+  {
+   "path": "run/references/rec-192719/left/descriptor.json",
+   "role": "photometry",
+   "bytes": 1074,
+   "sha256": "183a0361a99d1c842e5ce2fe5bcd98c6d8fe4116e0da98710cc13d7434233b7f",
+   "source": "analysis/calib-20261105/run-001/references/rec-192719/left/descriptor.json"
+  },
+  {
+   "path": "run/references/rec-192719/left/dark_mean.npy",
+   "role": "photometry",
+   "bytes": 6336640,
+   "sha256": "d3b31095401d357fcb913de06f55939ddfa23d177dc87ac46c1945925f77b0f5",
+   "source": "analysis/calib-20261105/run-001/references/rec-192719/left/dark_mean.npy"
+  },
+  {
+   "path": "run/references/rec-192719/left/pix_std.npy",
+   "role": "photometry",
+   "bytes": 6336640,
+   "sha256": "24b798fbaf1a3d6c1d4cade2b03fc2c9a5575ea93a89a6966bf16ae71b937ad9",
+   "source": "analysis/calib-20261105/run-001/references/rec-192719/left/pix_std.npy"
+  },
+  {
+   "path": "run/references/rec-192719/left/hot.npy",
+   "role": "photometry",
+   "bytes": 1584256,
+   "sha256": "111aa115e4ad119d71ea3da7131970f7eff039d924df877bdc1c83c51654f681",
+   "source": "analysis/calib-20261105/run-001/references/rec-192719/left/hot.npy"
+  },
+  {
+   "path": "run/lattice/rec-192719/left/roi.json",
+   "role": "photometry",
+   "bytes": 28575,
+   "sha256": "df3d4efc05911acc60e00919975e957cd15ae24fa3c7cf192d69213b9cc14e62",
+   "source": "analysis/calib-20261105/run-001/lattice/rec-192719/left/roi.json"
+  },
+  {
+   "path": "source_recording/rec_20261105_191343_raw16_5fps/recording.json",
+   "role": "source_record",
+   "bytes": 18560,
+   "sha256": "0993f9603f964057c05595bf0a7b0f3159084526cd35235e2251074ed621740c",
+   "source": "trilobite-data_for_calib/session_20261105_191121/rec_20261105_191343_raw16_5fps/recording.json"
+  }
+ ],
+ "provenance": {
+  "source": "TrilobiteVision",
+  "tv_revision": "7f304a8",
+  "tv_config": "config/fieldsample/left-room.yaml",
+  "bundle": "analysis/calib-20261105/run-001/calibration/scaled-004/left",
+  "calibration_run": "analysis/calib-20261105/run-001",
+  "source_recording": "trilobite-data_for_calib/session_20261105_191121/rec_20261105_191343_raw16_5fps",
+  "note": "only calibration trusted for integration development (user, 2026-11-23); a calibration with more video samples will supersede it",
+  "registered": "2026-11-23"
+ }
+}
