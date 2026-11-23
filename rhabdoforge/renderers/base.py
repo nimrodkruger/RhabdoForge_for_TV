@@ -750,6 +750,31 @@ class Renderer:
 
                     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
 
+    @property
+    def incident_groups(self) -> int:
+        """Ray groups the reduction averages: one per ommatidium if fused, else one per rhabdomere."""
+        return self._model.N if self._model.bundle.fused_rhabdoms else self._model.size
+
+    def write_incident(self, light: np.ndarray) -> None:
+        """
+        Supply pre-sensitivity light per ray group in place of the scene dispatch.
+
+        The reduction computes each group's incident colour as sum(min(rgb, 100) * w) / sum(w)
+        over its samples. Writing the light into sample 0 with weight 1 and zero weight into the
+        others makes that colour equal the given light (still subject to the same per-sample
+        radiance clamp), so the light is not angularly weighted a second time. Only the scratch
+        'rays_intermediate' buffer is written: no model buffer, no dynamic state.
+        """
+        light = np.asarray(light, dtype=np.float32)
+        n = self.incident_groups
+        if light.shape != (n, 3) or not np.isfinite(light).all():
+            raise ValueError(f'incident light must be finite with shape ({n}, 3), got {light.shape}')
+        rays = np.zeros((n, self._samples_per_rhab, 4), dtype=np.float32)
+        rays[:, 0, :3] = light
+        rays[:, 0, 3] = 1.0
+        self.eye_buffers['rays_intermediate'].write(rays.reshape(-1, 4))
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT)
+
     def _reduction(self) -> None:
 
         with self.reduction_shader as shader:
@@ -1063,9 +1088,14 @@ class Renderer:
 
         self.context.profiler.tick()
 
-    def step(self, dt: Optional[float] = None, readback: bool = True) -> Optional['VisualOutput']:
+    def step(self, dt: Optional[float] = None, readback: bool = True,
+             incident: Optional[np.ndarray] = None) -> Optional['VisualOutput']:
         """
         Advance biological time by one step and render everything.
+
+        incident: optional (ray_groups, 3) pre-sensitivity light per ray group, already
+            angularly weighted (e.g. sampled from a recording). It replaces the scene dispatch
+            for this step only; reduction and dynamics run unchanged. See write_incident().
 
         batch_size == 1: blocks (via ping-pong PBO) and returns this frame's VisualOutput.
         batch_size > 1: queues the frame on the GPU. Returns None until the batch is full,
@@ -1100,7 +1130,10 @@ class Renderer:
 
 
         with self.context.profiler('dispatch', gpu=True):
-            self._dispatch()
+            if incident is None:
+                self._dispatch()
+            else:
+                self.write_incident(incident)
         with self.context.profiler('reduce', gpu=True):
             self._reduction()
         with self.context.profiler('dynamics', gpu=True):

@@ -79,9 +79,15 @@ def test_scaffold_regenerates_bit_for_bit_from_the_registered_asset():
 # Native loader
 
 def test_unmodified_native_loader_builds_it_without_trilobite(model):
-    assert not any(m == 'trilobite' or m.startswith('trilobite.') for m in sys.modules)
     plain = Model.from_file(str(SCAFFOLD))      # no preset at all: the loader alone accepts the file
     assert plain.shape == (130, 1) and model.shape == (130, 1)
+    # A fresh interpreter: building the preset and the hardware package never imports TrilobiteVision
+    code = ("import sys; sys.path.insert(0, 'examples'); import trilobite_eye, rhabdoforge.hardware; "
+            "trilobite_eye.build_model(); "
+            "print(any(m == 'trilobite' or m.startswith('trilobite.') for m in sys.modules))")
+    out = subprocess.run([sys.executable, '-c', code], cwd=ROOT, capture_output=True, text=True)
+    assert out.returncode == 0, out.stderr
+    assert out.stdout.strip().splitlines()[-1] == 'False'
 
 
 def test_auto_derived_lattice_values_are_degenerate_and_the_preset_never_uses_them(model):

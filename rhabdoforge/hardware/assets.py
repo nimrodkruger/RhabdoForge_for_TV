@@ -240,6 +240,7 @@ def build_manifest(*, asset: str, version: str, label: str, status: str, source_
 
     rays = json.loads((source_root / bundle / 'rays.json').read_text())
     geometry = [e for e in entries if e['role'] == 'geometry']
+    tag, assignment, tag_warnings = resolve_registration_tag(rays, hardware_tag, tag_assignment)
 
     return {
         'schema': SCHEMA,
@@ -248,11 +249,9 @@ def build_manifest(*, asset: str, version: str, label: str, status: str, source_
         'label': label,
         'status': status,
         'head': head,
-        'hardware_tag': hardware_tag,
-        'hardware_tag_assignment': tag_assignment or {
-            'assigned_by': None,
-            'note': 'untagged: no hardware tag was recorded for this calibration; none is asserted',
-        },
+        'hardware_tag': tag,
+        'hardware_tag_assignment': assignment,
+        'registration_warnings': tag_warnings,
         'calibration_digest': digest_of(geometry),
         'content_digest': digest_of(entries),
         'calibration': {
@@ -276,8 +275,52 @@ def build_manifest(*, asset: str, version: str, label: str, status: str, source_
     }
 
 
-def write_manifest(manifest: dict[str, Any], manifest_dir: Path = MANIFEST_DIR) -> Path:
+def resolve_registration_tag(rays: dict, explicit_tag: Optional[str],
+                             explicit: Optional[dict]) -> tuple[Optional[str], dict, list[str]]:
+    """
+    Tag of a registered asset: the calibration export's own identity, unless an operator
+    states one at registration (explicit wins). A disagreement is kept visible in the
+    manifest's registration_warnings and the assignment record, never resolved silently.
+    """
+    exported = rays.get('hardware_tag')
+    exported = exported.strip() if isinstance(exported, str) and exported.strip() else None
+    exported_assignment = rays.get('hardware_tag_assignment')
+    export_warnings = ((rays.get('provenance') or {}).get('recordings') or {}).get('tag_warnings') or []
+    warnings = [f'calibration export: {w}' for w in export_warnings]
+
+    if explicit_tag is not None:
+        explicit = dict(explicit or {})
+        tag = explicit_tag.strip()
+        who = (explicit.get('assigned_by') or '').strip()
+        if not tag or not who:
+            raise AssetError('an explicit hardware tag needs both the tag and who assigned it')
+        if exported and exported != tag:
+            warnings.append(f'registration tag {tag!r} differs from the calibration export tag {exported!r}')
+        return tag, {'source': 'registration', 'basis': 'explicit', 'assigned_by': who,
+                     'note': explicit.get('note', ''), 'date': explicit.get('date') or date.today().isoformat(),
+                     'export_tag': exported, 'export_assignment': exported_assignment}, warnings
+
+    if exported:
+        return exported, {'source': 'calibration export', **(exported_assignment or {})}, warnings
+
+    if 'hardware_tag' in rays:
+        note = 'untagged: the calibration export states no hardware tag'
+    else:
+        note = 'untagged: no hardware tag was recorded for this calibration; none is asserted'
+    return None, {'source': 'none', 'assigned_by': None, 'note': note,
+                  'export_assignment': exported_assignment}, warnings
+
+
+def write_manifest(manifest: dict[str, Any], manifest_dir: Path = MANIFEST_DIR, replace: bool = False) -> Path:
+    """Write a manifest; refuses to change the files or tag of an existing asset@version."""
     path = Path(manifest_dir) / f"{manifest['asset']}@{manifest['version']}.json"
+    if path.exists() and not replace:
+        old = json.loads(path.read_text())
+        changed = [k for k in ('content_digest', 'calibration_digest', 'hardware_tag', 'head')
+                   if old.get(k) != manifest.get(k)]
+        if changed:
+            raise AssetError(f'{path.name} is already registered with different {changed}; '
+                             f'register a new version (or pass replace=True knowingly)')
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(manifest, indent=1) + '\n')
     return path
