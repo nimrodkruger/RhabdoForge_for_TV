@@ -43,6 +43,11 @@ class SceneBaker:
 
         # CPU-side data
         self.gpu_inst_info: Optional[np.ndarray] = None
+        self.cpu_tlas_nodes = np.empty(0, dtype=np.float32)
+        self.cpu_tlas_indices = np.empty(0, dtype=np.uint32)
+        self.cpu_blas_indices = np.empty(0, dtype=np.uint32)
+        self.cpu_inst_visible = np.empty(0, dtype=np.uint32)
+        self._geom_last_rev = {}
         self._material_map: Dict[int, int] = {}
         self._asset_blas_map: Dict[int, Dict] = {}
         self.tex_arrays: Dict[int, 'TextureObject'] = {}
@@ -50,6 +55,16 @@ class SceneBaker:
 
         if not self.scene.instances:
             print('Warning: Scene is empty, nothing to bake.')
+            self._pack_materials()
+            self._pack_lights()
+            self.cpu_verts = None
+            self.cpu_idx = None
+            self.cpu_pts = None
+            self.cpu_blas_nodes = None
+            self.gpu_inst_info = np.empty(0, dtype=RENDERABLE_DTYPE)
+            self._push_to_gpu()
+            if self.scene.sky:
+                self.scene_textures.register_existing('sky_texture', self.scene.sky.texture_id, GL_TEXTURE_2D, unit=0)
             return
 
         # Pack scene materials and lights

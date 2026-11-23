@@ -1,5 +1,5 @@
 #version 430 core
-in vec2 v_tex_coord;
+layout (location = 0) in vec2 v_tex_coord;
 out vec4 f_color;
 
 uniform sampler2D hdr_scene;
